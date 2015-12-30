@@ -1,0 +1,23 @@
+---
+
+_apache:
+  use_default_config: Yes
+  listen:
+    - { ip: localhost, port: 80 }
+  modules:
+    disable: []
+    enable: []
+  sites:
+    - name: heimbot
+      enabled: True
+      vhost: localhost
+      port: 80
+      document_root: /var/www
+      server_admin: info@heimbot
+      extra: |+
+        <Directory "/var/www">
+            AllowOverride All
+            Require all granted
+        </Directory>
+
+

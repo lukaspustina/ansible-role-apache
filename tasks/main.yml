@@ -1,0 +1,38 @@
+---
+
+- name: Install Apache
+  apt: pkg={{ item }} state=present
+  with_items:
+    - apache2
+  notify:
+    - Stop Apache
+
+- name: Set listen bindings
+  template: src=etc/apache2/ports.conf.j2 dest=/etc/apache2/ports.conf owner=root group=root mode=0644
+
+- name: Check if 000-default site is enabled
+  command: a2query -s 000-default
+  register: a2query
+  failed_when: a2query.rc != 0 and a2query.rc != 32
+  always_run: True
+
+- name: Activate default site
+  command: a2ensite 000-default
+  when: _apache.use_default_config == True and a2query.rc == 32
+
+- name: Disable default site
+  command: a2dissite 000-default
+  when: _apache.use_default_config == False and a2query.rc == 0
+
+- include: secure_installation.yml
+
+- name: Disable Modules
+  apache2_module: name={{ item }} state=absent
+  with_items: _apache.modules.disable
+
+- name: Enable Modules
+  apache2_module: name={{ item }} state=present
+  with_items: _apache.modules.enable
+
+- include: sites.yml
+

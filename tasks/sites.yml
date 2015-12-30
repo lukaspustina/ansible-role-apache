@@ -1,0 +1,14 @@
+---
+
+- name: Create sites
+  template: src=etc/apache2/sites-available/vsite.conf.j2 dest=/etc/apache2/sites-available/{{ item.name }}.conf owner=root group=root mode=0644
+  with_items: "{{ _apache.sites }}"
+  notify:
+    - Restart Apache
+
+- name: Toogle sites
+  command: "{% if item.enabled == True %}a2ensite{% else %}a2dissite{% endif %} {{ item.name }}"
+  with_items: "{{ _apache.sites }}"
+  notify:
+    - Restart Apache
+

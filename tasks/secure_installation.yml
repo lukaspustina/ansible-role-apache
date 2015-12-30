@@ -1,0 +1,40 @@
+---
+
+- block:
+  - name: Deactivate TRACE Method
+    lineinfile: dest=/etc/apache2/conf-available/security.conf regexp='^TraceEnable' line='TraceEnable Off' insertafter='.*TraceEnable' owner=root group=root mode=0644
+    notify:
+    - Restart Apache
+
+  - name: Deactivate Signature
+    lineinfile: dest=/etc/apache2/conf-available/security.conf regexp='^ServerSignature' line='ServerSignature Off' insertafter='.*ServerSignature' owner=root group=root mode=0644
+    notify:
+    - Restart Apache
+
+  - name: Set Server Banner to Prod
+    lineinfile: dest=/etc/apache2/conf-available/security.conf regexp='^ServerTokens' line='ServerTokens Prod' insertafter='.*ServerTokens' owner=root group=root mode=0644
+    notify:
+    - Restart Apache
+
+  - name: Check if security configuration is enabled
+    command: a2query -c security
+    register: a2query
+    failed_when: a2query.rc != 0 and a2query.rc != 32
+    always_run: True
+
+  - name: Enable security configuration
+    command: a2enconf security
+    when: a2query.rc == 32
+    notify:
+    - Restart Apache
+
+- block:
+  - name: Set SSL to TLSv1 only
+    lineinfile: dest=/etc/apache2/mods-available/ssl.conf regexp='^\s*SSLProtocol' line='SSLProtocol -ALL +TLSv1' owner=root group=root mode=0644
+    notify:
+      - Restart Apache
+  - name: Set secure Cipher Suites
+    lineinfile: dest=/etc/apache2/mods-available/ssl.conf regexp='^\s*SSLCipherSuite' line='SSLCipherSuite ALL:!aNULL:!ADH:!eNULL:!LOW:!EXP:RC4+RSA:+HIGH:+MEDIUM' owner=root group=root mode=0644
+    notify:
+      - Restart Apache
+
