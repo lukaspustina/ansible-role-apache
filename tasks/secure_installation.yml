@@ -20,7 +20,7 @@
     command: a2query -c security
     register: a2query
     failed_when: a2query.rc != 0 and a2query.rc != 32
-    always_run: True
+    check_mode: no
 
   - name: Enable security configuration
     command: a2enconf security
